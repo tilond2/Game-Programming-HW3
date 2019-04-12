@@ -4,11 +4,13 @@ using UnityEngine;
 
 public class Player : MonoBehaviour
 {
-    public float screenEdge = 9f,speedDecay = 10f;
+    public float screenEdgeX = 9f, screenEdgeY = 6f, speed = 10f, speedDecay = 10f;
     private AudioSource sound, sound2;
     GameObject music;
     private Game gameScript;
     public bool mute = false;
+    public int health = 1;
+    float invuln = 0f;
     // Start is called before the first frame update
     void Start()
     {
@@ -32,41 +34,67 @@ public class Player : MonoBehaviour
             this.GetComponent<SpriteRenderer>().flipX = false;
         }
 
+        invuln -= Time.deltaTime;
+
+        if (Input.GetKeyDown("space")){
+            fire();
+        }
         float value = Input.GetAxis("Vertical");
         float rotateS = Input.GetAxis("Horizontal")*1.1f;
         float faster = Input.GetAxis("Fire3");
         if (faster != 0) value = value * 1.5f;
         if (value != 0)
         {
-            
-            
             value = 40f*value / speedDecay;
             transform.Translate(Vector2.up * -value * Time.deltaTime);
         }
         if (rotateS != 0)
             transform.Rotate(Vector3.forward * -rotateS);
 
-        if (transform.position.x > screenEdge)
+        if (transform.position.x > screenEdgeX)
         {
-            transform.position = new Vector3(screenEdge, transform.position.y, transform.position.z);
+            transform.position = new Vector3(-screenEdgeX, transform.position.y, transform.position.z);
         }
-        if (transform.position.x < -screenEdge) {
-            transform.position = new Vector3(-screenEdge, transform.position.y, transform.position.z);
+        if (transform.position.x < -screenEdgeX) {
+            transform.position = new Vector3(screenEdgeX, transform.position.y, transform.position.z);
+        }
+        if (transform.position.y > screenEdgeY)
+        {
+            transform.position = new Vector3(transform.position.x, -screenEdgeY, transform.position.z);
+        }
+        if (transform.position.y < -screenEdgeY)
+        {
+            transform.position = new Vector3(transform.position.x, screenEdgeY, transform.position.z);
         }
 
     }
     void OnTriggerEnter2D(Collider2D coll)
     {
         Debug.Log("Player touched");
-        if (coll.gameObject.tag == "Fruit")
+        if (coll.gameObject.tag == "Enemy")
         {
-            gameScript.ScoreUpdate(100);
+            
+            if(invuln <= 0)
+            {
+                health--;
+                invuln = 2f;
+            }
+           
             if (!mute)
             {
                 sound.PlayOneShot(sound.clip);
             }
             
         }
+    }
+    public void die()
+    {
+        Destroy(gameObject);
+    }
+    public void fire()
+    {
+        var shot = new GameObject();
+
     }
     public void muteSound()
     {

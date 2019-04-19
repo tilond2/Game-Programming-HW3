@@ -65,7 +65,7 @@ public class GameManager : MonoBehaviour
         Debug.Log("respawning");
 
         player.SetActive(false);
-        yield return new WaitForSeconds(.2f);
+        yield return new WaitForSeconds(2f);
         Debug.Log("respawning2");
         player.SetActive(true);
         player.transform.position = new Vector3(-7.62f, 0, 0);

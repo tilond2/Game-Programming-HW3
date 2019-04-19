@@ -8,6 +8,7 @@ public class GameManager : MonoBehaviour
 {
     public static GameManager Instance;
     GameObject player;
+    private AudioSource sound;
 
     public int score;
     public int lives;
@@ -23,6 +24,7 @@ public class GameManager : MonoBehaviour
     public Text scoreText;
     public Text livesText;
     GameObject music;
+    
     string newName;
     private AudioSource song;
     int newScore;
@@ -31,6 +33,7 @@ public class GameManager : MonoBehaviour
     {
         GameObject scoreGO = GameObject.Find("Score");
         GameObject livesGO = GameObject.Find("Lives");
+        sound = this.GetComponent<AudioSource>();
         player = GameObject.Find("Player");
         scoreText = scoreGO.GetComponent<Text>();
         scoreText.text = "0";
@@ -65,6 +68,7 @@ public class GameManager : MonoBehaviour
         Debug.Log("respawning");
 
         player.SetActive(false);
+        sound.PlayOneShot(sound.clip);
         yield return new WaitForSeconds(2f);
         Debug.Log("respawning2");
         player.SetActive(true);
@@ -77,6 +81,7 @@ public class GameManager : MonoBehaviour
     {
         Debug.Log("dying");
         Destroy(player);
+        sound.PlayOneShot(sound.clip);
         yield return new WaitForSeconds(2f);
 
     }

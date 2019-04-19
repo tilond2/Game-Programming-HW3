@@ -4,18 +4,32 @@ using UnityEngine;
 
 public class Player : MonoBehaviour
 {
-    public float screenEdgeX = 9f, screenEdgeY = 6f, speed = 10f, speedDecay = 10f;
+    public GameObject bullet;
+    GameObject GameManager;
+    public float speed = 10f, speedDecay = 10f;
     private AudioSource sound, sound2;
     GameObject music;
     private Game gameScript;
     public bool mute = false;
-    public int health = 1;
+    public int health = 3;
     float invuln = 0f;
+    float cooldownTimer = 0;
+    public float fireDelay = 0.25f;
+
+    public Weapon CurrentWeapon;
+    [System.Serializable]
+    public class Weapon
+    {
+        public GameObject bullet;
+        public float fireDelay = 0.25f;
+
+    }
     // Start is called before the first frame update
     void Start()
     {
         sound = this.GetComponent<AudioSource>();
         music = GameObject.Find("BGAudio");
+        GameManager = GameObject.Find("GameManager");
         sound2 = music.GetComponent<AudioSource>();
         gameScript = this.GetComponent<Game>();
     }
@@ -33,10 +47,10 @@ public class Player : MonoBehaviour
             Debug.Log("right");
             this.GetComponent<SpriteRenderer>().flipX = false;
         }
-
+        //Debug.Log("invuln = " + invuln);
         invuln -= Time.deltaTime;
-
-        if (Input.GetKeyDown("space")){
+        cooldownTimer -= Time.deltaTime;
+        if (Input.GetKey("space")){
             fire();
         }
         float value = Input.GetAxis("Vertical");
@@ -51,22 +65,6 @@ public class Player : MonoBehaviour
         if (rotateS != 0)
             transform.Rotate(Vector3.forward * -rotateS);
 
-        if (transform.position.x > screenEdgeX)
-        {
-            transform.position = new Vector3(-screenEdgeX, transform.position.y, transform.position.z);
-        }
-        if (transform.position.x < -screenEdgeX) {
-            transform.position = new Vector3(screenEdgeX, transform.position.y, transform.position.z);
-        }
-        if (transform.position.y > screenEdgeY)
-        {
-            transform.position = new Vector3(transform.position.x, -screenEdgeY, transform.position.z);
-        }
-        if (transform.position.y < -screenEdgeY)
-        {
-            transform.position = new Vector3(transform.position.x, screenEdgeY, transform.position.z);
-        }
-
     }
     void OnTriggerEnter2D(Collider2D coll)
     {
@@ -77,7 +75,19 @@ public class Player : MonoBehaviour
             if(invuln <= 0)
             {
                 health--;
-                invuln = 2f;
+                if (health > 0)
+                {
+                    GameManager.GetComponent<GameManager>().startRespawn();
+                    invuln = 4f;
+                }
+                else
+                {
+                    GameManager.GetComponent<GameManager>().startDie();
+                    invuln = 2f;
+                }
+                
+                GameManager.GetComponent<GameManager>().LifeUpdate();
+                
             }
            
             if (!mute)
@@ -87,13 +97,40 @@ public class Player : MonoBehaviour
             
         }
     }
-    public void die()
+    public IEnumerator die()
     {
+        Debug.Log("dying");
         Destroy(gameObject);
+        yield return new WaitForSeconds(2f);
+
+    }
+    public IEnumerator respawn()
+    {
+        Debug.Log("respawning");
+
+        gameObject.SetActive(false);
+        yield return new WaitForSeconds(2f);
+        Debug.Log("respawning2");
+        gameObject.SetActive(true);
+        gameObject.transform.position = new Vector3(-7.62f, 0, 0);
+        gameObject.transform.rotation = Quaternion.identity;
+        gameObject.GetComponent<Rigidbody2D>().velocity = Vector3.zero;
+
     }
     public void fire()
     {
-        var shot = new GameObject();
+        if (cooldownTimer <= 0)
+        {
+            cooldownTimer = CurrentWeapon.fireDelay;
+            
+            CurrentWeapon.bullet = Instantiate<GameObject>(bullet);
+            CurrentWeapon.bullet.transform.position = transform.position;
+            CurrentWeapon.bullet.transform.rotation = transform.rotation;
+            //float x = shot.transform.rotation.eulerAngles;
+            CurrentWeapon.bullet.transform.rotation *= Quaternion.Euler(0, 0, -90f);
+            GameObject shot = CurrentWeapon.bullet;
+        }
+        
 
     }
     public void muteSound()

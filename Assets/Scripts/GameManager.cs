@@ -7,6 +7,7 @@ using UnityEngine.UI;
 public class GameManager : MonoBehaviour
 {
     public static GameManager Instance;
+    GameObject player;
 
     public int score;
     public int lives;
@@ -30,12 +31,17 @@ public class GameManager : MonoBehaviour
     {
         GameObject scoreGO = GameObject.Find("Score");
         GameObject livesGO = GameObject.Find("Lives");
+        player = GameObject.Find("Player");
         scoreText = scoreGO.GetComponent<Text>();
         scoreText.text = "0";
         livesText = livesGO.GetComponent<Text>();
         livesText.text = "3";
         music = GameObject.Find("BGAudio");
         newName = PlayerPrefs.GetString("Name");
+    }
+    private void Update()
+    {
+        Debug.Log("time = " + Time.time);
     }
 
     // Update is called once per frame
@@ -44,6 +50,34 @@ public class GameManager : MonoBehaviour
         song = music.GetComponent<AudioSource>();
         song.volume = 1;
         song.PlayOneShot(song.clip);
+
+    }
+    public void startRespawn()
+    {
+        StartCoroutine(respawn());
+    }
+    public void startDie()
+    {
+        StartCoroutine(die());
+    }
+    public IEnumerator respawn()
+    {
+        Debug.Log("respawning");
+
+        player.SetActive(false);
+        yield return new WaitForSeconds(.2f);
+        Debug.Log("respawning2");
+        player.SetActive(true);
+        player.transform.position = new Vector3(-7.62f, 0, 0);
+        player.transform.rotation = Quaternion.identity;
+        player.GetComponent<Rigidbody2D>().velocity = Vector3.zero;
+
+    }
+    public IEnumerator die()
+    {
+        Debug.Log("dying");
+        Destroy(player);
+        yield return new WaitForSeconds(2f);
 
     }
     public void ScoreUpdate(int score)
@@ -57,7 +91,7 @@ public class GameManager : MonoBehaviour
         int newLives = int.Parse(livesText.text); // get current lives
         newLives -= 1; // subtract from the lives
         livesText.text = newLives.ToString();
-        if (newLives < 0)
+        if (newLives < 1)
         {
             AddScore();
             SceneManager.LoadScene("Game Over");
